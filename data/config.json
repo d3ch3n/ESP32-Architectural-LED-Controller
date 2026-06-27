@@ -6,8 +6,8 @@
   "colorHex": 1999077,
   "animationSpeed": 25,
   "strips": [
-    { "gpio": 4, "ledCount": 180, "enabled": true },
-    { "gpio": 0, "ledCount": 156, "enabled": true },
-    { "gpio": 2, "ledCount": 92,  "enabled": true }
+    { "gpio": 4, "ledCount": 160, "enabled": true },
+    { "gpio": 16, "ledCount": 141, "enabled": true },
+    { "gpio": 2, "ledCount": 120, "enabled": true }
   ]
 }
