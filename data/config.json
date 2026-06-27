@@ -1,0 +1,13 @@
+{
+  "profileName": "Sala Principal",
+  "deviceName": "Ripado Mestre",
+  "brightness": 255,
+  "maxBrightness": 180,
+  "colorHex": 1999077,
+  "animationSpeed": 25,
+  "strips": [
+    { "gpio": 16, "ledCount": 180, "enabled": true },
+    { "gpio": 17, "ledCount": 156, "enabled": true },
+    { "gpio": 18, "ledCount": 92,  "enabled": true }
+  ]
+}
