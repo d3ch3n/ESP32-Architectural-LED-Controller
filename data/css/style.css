@@ -150,6 +150,113 @@ input:checked + .slider:before { transform: translateX(22px); }
 .color-well::-webkit-color-swatch-wrapper { padding: 0; }
 .color-well::-webkit-color-swatch { border: 2px solid var(--border-color); border-radius: 50%; }
 
+/* Tab Engine Layout */
+.tab-navigation {
+    display: flex;
+    background-color: #131a26;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 16px;
+    padding: 2px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.tab-btn.active {
+    background-color: var(--accent-color);
+    color: var(--text-main);
+}
+
+.tab-view { display: none; }
+.tab-view.active { display: block; }
+
+/* Engineering Form Fields */
+.section-title {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.form-label {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+.form-input {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+    text-align: center;
+}
+
+.form-input.short { width: 75px; }
+.form-input:focus { border-color: var(--accent-color); }
+
+.save-btn {
+    width: 100%;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: 0.2s;
+}
+
+.form-group-eng {
+    background-color: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.finder-btn {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.finder-btn:hover {
+    background-color: #1565c0;
+}
+
+.save-btn:hover { background-color: #b71c1c; }
+
 /* Badge Status */
 footer { text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
 .badge { font-weight: 600; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }

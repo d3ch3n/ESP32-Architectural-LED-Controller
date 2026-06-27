@@ -11,35 +11,73 @@
         <header>
             <h1 id="profile-name">Loading Profile...</h1>
             <p class="subtitle">ESP32 Architectural LED Controller</p>
+            
+            <div class="tab-navigation">
+                <button class="tab-btn active" id="tab-control-btn">Control</button>
+                <button class="tab-btn" id="tab-eng-btn">Installer</button>
+            </div>
         </header>
 
         <main class="card">
-            <section class="control-group row">
-                <span class="label">System Power</span>
-                <label class="switch">
-                    <input type="checkbox" id="power-switch">
-                    <span class="slider round"></span>
-                </label>
-            </section>
+            <div id="view-control" class="tab-view active">
+                <section class="control-group row">
+                    <span class="label">System Power</span>
+                    <label class="switch">
+                        <input type="checkbox" id="power-switch">
+                        <span class="slider round"></span>
+                    </label>
+                </section>
+                <hr class="divider">
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">Master Brightness</span>
+                        <span class="value-display" id="brightness-val">0%</span>
+                    </div>
+                    <input type="range" id="brightness-slider" min="0" max="255" value="0" class="range-slider">
+                </section>
+                <hr class="divider">
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">Solid Color</span>
+                        <input type="color" id="color-picker" value="#1e88e5" class="color-well">
+                    </div>
+                </section>
+            </div>
 
-            <hr class="divider">
+            <div id="view-engineering" class="tab-view">
+                <form id="eng-form">
+                    <h3 class="section-title">Hardware Geometry & Calibration</h3>
+                    
+                    <div class="form-group-eng">
+                        <div class="form-row">
+                            <span class="form-label">Strip 1</span>
+                            <input type="number" id="strip0-gpio" placeholder="GPIO" class="form-input short" required>
+                            <input type="number" id="strip0-count" placeholder="LEDs" class="form-input short" required>
+                            <button type="button" class="finder-btn" onclick="triggerLedFinder(0)">Test</button>
+                        </div>
+                    </div>
 
-            <section class="control-group">
-                <div class="row">
-                    <span class="label">Master Brightness</span>
-                    <span class="value-display" id="brightness-val">0%</span>
-                </div>
-                <input type="range" id="brightness-slider" min="0" max="255" value="0" class="range-slider">
-            </section>
+                    <div class="form-group-eng">
+                        <div class="form-row">
+                            <span class="form-label">Strip 2</span>
+                            <input type="number" id="strip1-gpio" placeholder="GPIO" class="form-input short" required>
+                            <input type="number" id="strip1-count" placeholder="LEDs" class="form-input short" required>
+                            <button type="button" class="finder-btn" onclick="triggerLedFinder(1)">Test</button>
+                        </div>
+                    </div>
 
-            <hr class="divider">
+                    <div class="form-group-eng">
+                        <div class="form-row">
+                            <span class="form-label">Strip 3</span>
+                            <input type="number" id="strip2-gpio" placeholder="GPIO" class="form-input short" required>
+                            <input type="number" id="strip2-count" placeholder="LEDs" class="form-input short" required>
+                            <button type="button" class="finder-btn" onclick="triggerLedFinder(2)">Test</button>
+                        </div>
+                    </div>
 
-            <section class="control-group">
-                <div class="row">
-                    <span class="label">Solid Color</span>
-                    <input type="color" id="color-picker" value="#1e88e5" class="color-well">
-                </div>
-            </section>
+                    <button type="submit" class="save-btn">Commit to Flash & Reboot</button>
+                </form>
+            </div>
         </main>
 
         <footer>
