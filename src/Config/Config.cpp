@@ -42,6 +42,7 @@ void Config_CalculateGeometry() {
  */
 void Config_LoadDefaultHardware() {
     // Injects an installation profile programmatically (Default Factory Fallback)
+    g_cfg.power = false;
     strcpy(g_cfg.profileName, "Sala Principal");
     strcpy(g_cfg.deviceName, "Ripado Mestre");
     g_cfg.brightness = 255;
