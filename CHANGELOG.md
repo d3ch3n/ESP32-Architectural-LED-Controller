@@ -49,3 +49,11 @@ O formato é baseado no padrão [Keep a Changelog](https://keepachangelog.com/en
 
 ### Fixed
 - Resolução de travamento e conflito de barramento serial (Port Busy) através da liberação de canal do monitor de depuração.
+
+## [0.3.0] - 2026-06-27
+
+### Added
+- Módulo assíncrono de conectividade `WebService` (`src/Web/`).
+- Barramento de transmissão bidirecional assíncrono via protocolo **WebSockets** (`/ws`).
+- Suporte a ponto de acesso captivo dinâmico (`WiFiManager`) isolado de hardcode de rede.
+- Ativação do resolvedor de nomes local por protocolo **mDNS** (`ripado.local`).

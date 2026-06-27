@@ -28,3 +28,13 @@
 ### 2. Decisões de Arquitetura
 - Processamento assíncrono total: uso do método `cleanupClients()` no loop de background para purga de conexões mortas sem bloquear a CPU.
 - Acoplamento limpo: mensagens recebidas via rede injetam comandos diretamente nas assinaturas públicas do `AnimationEngine` (`Animation_StartOpening`, `Animation_StartColorChange`), mantendo o isolamento de escopo.
+
+## Sprint 4: O Painel SPA (Interface Web) [2026-06-27]
+### 1. Implementações
+- Construída a arquitetura de Front-End Single Page Application (SPA) baseada em HTML5, CSS3 estrutural e JavaScript Vanilla puro.
+- Desenvolvido isolamento completo de recursos estáticos servidos diretamente via cache LittleFS pelo `AsyncWebServer`.
+- Implementada a engenharia de sincronismo reativo WebSocket: atualizações de estado aplicadas em um painel refletem instantaneamente nos seletores de todos os clientes conectados via broadcast.
+
+### 2. Decisões de Arquitetura
+- Abandono de frameworks pesados (React/Vue) para eliminar sobrecarga de requisições HTTP e otimizar o tempo de renderização na CPU limitada do ESP32.
+- Conversão binária de strings Hex de cor para inteiros numéricos de 24-bits diretamente na camada do cliente (JavaScript), reduzindo o uso de strings e buffers na memória ram do microcontrolador.

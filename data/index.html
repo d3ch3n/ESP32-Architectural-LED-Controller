@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ripado OS - Controller</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="profile-name">Loading Profile...</h1>
+            <p class="subtitle">ESP32 Architectural LED Controller</p>
+        </header>
+
+        <main class="card">
+            <section class="control-group row">
+                <span class="label">System Power</span>
+                <label class="switch">
+                    <input type="checkbox" id="power-switch">
+                    <span class="slider round"></span>
+                </label>
+            </section>
+
+            <hr class="divider">
+
+            <section class="control-group">
+                <div class="row">
+                    <span class="label">Master Brightness</span>
+                    <span class="value-display" id="brightness-val">0%</span>
+                </div>
+                <input type="range" id="brightness-slider" min="0" max="255" value="0" class="range-slider">
+            </section>
+
+            <hr class="divider">
+
+            <section class="control-group">
+                <div class="row">
+                    <span class="label">Solid Color</span>
+                    <input type="color" id="color-picker" value="#1e88e5" class="color-well">
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Status: <span id="status-badge" class="badge offline">Offline</span></p>
+        </footer>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>
