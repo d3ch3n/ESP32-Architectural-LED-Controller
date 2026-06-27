@@ -14,12 +14,17 @@ void LedController::initHardware() {
     for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++) {
         if (!g_strips[i].enabled) continue;
 
-        // Strict hardware mapping via runtime allocation switches
+        // Mapeamento dinâmico expandido para suportar os novos pinos de campo
         switch (g_strips[i].gpio) {
+            case 0:  FastLED.addLeds<WS2812B, 0,  GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
+            case 2:  FastLED.addLeds<WS2812B, 2,  GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
+            case 4:  FastLED.addLeds<WS2812B, 4,  GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
             case 16: FastLED.addLeds<WS2812B, 16, GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
             case 17: FastLED.addLeds<WS2812B, 17, GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
             case 18: FastLED.addLeds<WS2812B, 18, GRB>(g_strips[i].ledBuffer, g_strips[i].ledCount).setCorrection(TypicalLEDStrip); break;
-            default: break; // Safe expanding anchor for higher channel MCUs
+            default: 
+                Serial.printf("[LED_ENG] Error: GPIO %d mapped is not supported by driver switcher.\n", g_strips[i].gpio);
+                break;
         }
     }
     clearAll();
