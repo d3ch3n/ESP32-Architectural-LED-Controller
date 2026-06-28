@@ -8,6 +8,7 @@
 #include "../Web/WebService.h"
 #include "../Integration/CommandManager.h"
 #include "../Commissioning/CommissioningManager.h"
+#include "../OTA/OtaService.h"
 
 Application g_application;
 
@@ -17,15 +18,14 @@ void Application::begin()
 
     Serial.println();
     Serial.println("=======================================");
-    Serial.println(" RIPADO - ESP32 Architectural LED");
+    Serial.println(" LedStripPixelControl");
+    Serial.println(" ESP32 Architectural LED Controller");
     Serial.println("=======================================");
 
     initializeStorage();
     initializeHardware();
     initializeNetwork();
-
-    g_commandManager.begin();
-    g_commissioning.begin();
+    initializeServices();
 
     Serial.println("[SYSTEM] Initialization completed.");
 }
@@ -37,6 +37,8 @@ void Application::update()
     Animation_Update();
 
     g_commissioning.update();
+
+    g_otaService.update();
 
     g_ledEngine.show();
 
@@ -62,4 +64,13 @@ void Application::initializeHardware()
 void Application::initializeNetwork()
 {
     g_webService.initNetworkAndServer();
+}
+
+void Application::initializeServices()
+{
+    g_commandManager.begin();
+
+    g_commissioning.begin();
+
+    g_otaService.begin();
 }

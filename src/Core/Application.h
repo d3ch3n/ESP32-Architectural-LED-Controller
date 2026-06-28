@@ -10,6 +10,7 @@ private:
     void initializeStorage();
     void initializeHardware();
     void initializeNetwork();
+    void initializeServices();
 };
 
 extern Application g_application;
