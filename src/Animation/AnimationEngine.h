@@ -1,16 +1,13 @@
-/**
- * @file AnimationEngine.h
- * @brief Core FSM and geometric synchronization declarations.
- */
-
 #pragma once
+
 #include <Arduino.h>
-#include <FastLED.h> // <- Garante a injeção do tipo CRGB globalmente
+#include <FastLED.h>
+
 #include "../Config/Config.h"
 #include "../Led/LedController.h"
 
-// Enumeração explícita dos estados da FSM para sanar erros de escopo
-enum SystemState {
+enum SystemState
+{
     STATE_OFF,
     STATE_POWERING_ON,
     STATE_ON,
@@ -18,12 +15,42 @@ enum SystemState {
     STATE_CHANGING_COLOR
 };
 
-extern SystemState g_currentState;
-extern int16_t g_animationStep;
-extern uint16_t g_maxSystemLeds;
+class AnimationEngine
+{
+public:
+    void begin();
+    void update();
 
+    void startOpening();
+    void startClosing();
+    void startColorChange(uint32_t targetColorHex,
+                          uint8_t targetBrightness);
+
+    SystemState getState() const
+    {
+        return currentState;
+    }
+
+private:
+    void calculateOffsets();
+
+    SystemState currentState = STATE_OFF;
+
+    int16_t animationStep = 0;
+    uint16_t maxSystemLeds = 0;
+
+    unsigned long lastStepTimestamp = 0;
+
+    uint32_t pendingColor = 0x1E88E5;
+    bool colorTransitionActive = false;
+};
+
+extern AnimationEngine g_animation;
+
+// Compatibilidade temporária
 void Animation_Init();
 void Animation_Update();
 void Animation_StartOpening();
 void Animation_StartClosing();
-void Animation_StartColorChange(uint32_t targetColorHex, uint8_t targetBrightness);
+void Animation_StartColorChange(uint32_t targetColorHex,
+                                uint8_t targetBrightness);

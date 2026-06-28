@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +9,21 @@
 <body>
     <div class="container">
         <header>
+            <div class="logo-mark">
+                │<br>
+                ││<br>
+                │││<br>
+                ││││<br>
+                │││││
+            </div>
+
             <h1 id="profile-name">Loading Profile...</h1>
             <p class="subtitle">ESP32 Architectural LED Controller</p>
-            
+
             <div class="tab-navigation">
                 <button class="tab-btn active" id="tab-control-btn">Control</button>
                 <button class="tab-btn" id="tab-eng-btn">Installer</button>
+                <button class="tab-btn" id="tab-commission-btn">Commissioning</button>
             </div>
         </header>
 
@@ -27,7 +36,9 @@
                         <span class="slider round"></span>
                     </label>
                 </section>
+
                 <hr class="divider">
+
                 <section class="control-group">
                     <div class="row">
                         <span class="label">Master Brightness</span>
@@ -35,7 +46,9 @@
                     </div>
                     <input type="range" id="brightness-slider" min="0" max="255" value="0" class="range-slider">
                 </section>
+
                 <hr class="divider">
+
                 <section class="control-group">
                     <div class="row">
                         <span class="label">Solid Color</span>
@@ -46,14 +59,13 @@
 
             <div id="view-engineering" class="tab-view">
                 <form id="eng-form">
-                    <h3 class="section-title">Hardware Geometry & Calibration</h3>
-                    
+                    <h3 class="section-title">Hardware Geometry</h3>
+
                     <div class="form-group-eng">
                         <div class="form-row">
                             <span class="form-label">Strip 1</span>
                             <input type="number" id="strip0-gpio" placeholder="GPIO" class="form-input short" required>
                             <input type="number" id="strip0-count" placeholder="LEDs" class="form-input short" required>
-                            <button type="button" class="finder-btn" onclick="triggerLedFinder(0)">Test</button>
                         </div>
                     </div>
 
@@ -62,7 +74,6 @@
                             <span class="form-label">Strip 2</span>
                             <input type="number" id="strip1-gpio" placeholder="GPIO" class="form-input short" required>
                             <input type="number" id="strip1-count" placeholder="LEDs" class="form-input short" required>
-                            <button type="button" class="finder-btn" onclick="triggerLedFinder(1)">Test</button>
                         </div>
                     </div>
 
@@ -71,25 +82,102 @@
                             <span class="form-label">Strip 3</span>
                             <input type="number" id="strip2-gpio" placeholder="GPIO" class="form-input short" required>
                             <input type="number" id="strip2-count" placeholder="LEDs" class="form-input short" required>
-                            <button type="button" class="finder-btn" onclick="triggerLedFinder(2)">Test</button>
                         </div>
                     </div>
 
-                    <button type="submit" class="save-btn">Commit to Flash & Reboot</button>
+                    <button type="submit" class="save-btn">Salvar e Reiniciar</button>
                 </form>
+            </div>
+
+            <div id="view-commissioning" class="tab-view">
+                <h3 class="section-title">Commissioning</h3>
+
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">Fita</span>
+                        <select id="commission-strip" class="form-input select-input">
+                            <option value="0">Fita 1</option>
+                            <option value="1">Fita 2</option>
+                            <option value="2">Fita 3</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">LED Atual</span>
+                        <span class="value-display" id="commission-led-display">0</span>
+                    </div>
+
+                    <input type="number" id="commission-led" min="0" value="0" class="form-input full-input">
+
+                    <div class="commission-grid">
+                        <button type="button" class="commission-btn" id="commission-minus-10">-10</button>
+                        <button type="button" class="commission-btn" id="commission-minus-1">-1</button>
+                        <button type="button" class="commission-btn" id="commission-plus-1">+1</button>
+                        <button type="button" class="commission-btn" id="commission-plus-10">+10</button>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">Cor de Teste</span>
+                        <input type="color" id="commission-color" value="#ffffff" class="color-well">
+                    </div>
+
+                    <div class="commission-grid">
+                        <button type="button" class="commission-btn" data-color="#ffffff">White</button>
+                        <button type="button" class="commission-btn" data-color="#ff0000">Red</button>
+                        <button type="button" class="commission-btn" data-color="#00ff00">Green</button>
+                        <button type="button" class="commission-btn" data-color="#0000ff">Blue</button>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <div class="row">
+                        <span class="label">Auto Scan</span>
+                        <span class="value-display" id="commission-auto-state">Stopped</span>
+                    </div>
+
+                    <div class="row">
+                        <span class="label">Velocidade</span>
+                        <input type="number" id="commission-interval" min="30" max="2000" value="120" class="form-input short">
+                    </div>
+
+                    <div class="commission-grid">
+                        <button type="button" class="commission-btn success" id="commission-auto-start">Iniciar Auto</button>
+                        <button type="button" class="commission-btn danger" id="commission-auto-stop">Parar Auto</button>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <div class="commission-grid">
+                        <button type="button" class="commission-btn primary" id="commission-single">LED Único</button>
+                        <button type="button" class="commission-btn primary" id="commission-fill">Preencher Até</button>
+                        <button type="button" class="commission-btn danger" id="commission-off">Apagar</button>
+                        <button type="button" class="commission-btn success" id="commission-save-count">Salvar Quantidade</button>
+                    </div>
+                </section>
+
+                <p class="commission-help">
+                    Use LED Único para localizar um pixel. Use Preencher Até para validar a contagem da fita.
+                    Use Auto Scan para percorrer a fita automaticamente. Ao chegar no último LED físico, clique em Parar Auto e depois em Salvar Quantidade.
+                </p>
             </div>
         </main>
 
         <footer>
             <p>Status: <span id="status-badge" class="badge offline">Offline</span></p>
+
             <div class="control-card">
                 <h3>Configurações do Sistema</h3>
-                <button onclick="resetWiFi()" style="background-color: #e53935; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                      Alterar Rede Wi-Fi (Reset)
+                <button onclick="resetWiFi()" class="wifi-reset-btn">
+                    Alterar Rede Wi-Fi
                 </button>
             </div>
         </footer>
     </div>
+
     <script src="js/app.js"></script>
 </body>
 </html>

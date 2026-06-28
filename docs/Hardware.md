@@ -1,0 +1,13 @@
+ESP32 WROOM-32
+
+↓
+
+74AHCT125
+
+↓
+
+WS2812B
+
+↓
+
+5V Power Supply

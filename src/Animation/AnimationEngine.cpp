@@ -1,109 +1,198 @@
-/**
- * @file AnimationEngine.cpp
- * @brief FSM state triggers with sequential color-drain logic.
- */
-
 #include "AnimationEngine.h"
 
-SystemState g_currentState = STATE_OFF;
-int16_t g_animationStep = 0;
-uint16_t g_maxSystemLeds = 160; 
-unsigned long g_lastStepTimestamp = 0;
+AnimationEngine g_animation;
 
-// Variáveis isoladas para controle do fluxo de cor
-uint32_t g_targetColorHex = 0x1E88E5; 
-bool g_isColorTransitionActive = false; 
-
-void Animation_Init() {
-    g_maxSystemLeds = 0;
-    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++) {
-        if (g_strips[i].enabled && g_strips[i].ledCount > g_maxSystemLeds) {
-            g_maxSystemLeds = g_strips[i].ledCount;
-        }
-    }
-
-    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++) {
-        if (g_strips[i].enabled) {
-            g_strips[i].offset = g_maxSystemLeds - g_strips[i].ledCount;
-        }
-    }
-    g_currentState = STATE_OFF;
+void AnimationEngine::begin()
+{
+    calculateOffsets();
+    currentState = STATE_OFF;
 }
 
-void Animation_StartOpening() {
-    g_isColorTransitionActive = false; // Cancela transição pendente se ligar/desligar no meio
-    g_animationStep = 0;
+void AnimationEngine::calculateOffsets()
+{
+    maxSystemLeds = 0;
+
+    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++)
+    {
+        if (g_strips[i].enabled &&
+            g_strips[i].ledCount > maxSystemLeds)
+        {
+            maxSystemLeds = g_strips[i].ledCount;
+        }
+    }
+
+    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++)
+    {
+        if (g_strips[i].enabled)
+        {
+            g_strips[i].offset =
+                maxSystemLeds - g_strips[i].ledCount;
+        }
+    }
+}
+
+void AnimationEngine::startOpening()
+{
+    colorTransitionActive = false;
+
+    animationStep = 0;
+
     g_cfg.power = true;
-    g_currentState = STATE_POWERING_ON;
+
+    currentState = STATE_POWERING_ON;
 }
 
-void Animation_StartClosing() {
-    g_isColorTransitionActive = false;
-    g_animationStep = g_maxSystemLeds - 1;
+void AnimationEngine::startClosing()
+{
+    colorTransitionActive = false;
+
+    animationStep = maxSystemLeds - 1;
+
     g_cfg.power = false;
-    g_currentState = STATE_POWERING_OFF;
+
+    currentState = STATE_POWERING_OFF;
 }
 
-// Intercepta a mudança de cor, guarda o alvo e manda apagar primeiro
-void Animation_StartColorChange(uint32_t targetColorHex, uint8_t targetBrightness) {
-    g_targetColorHex = targetColorHex;
+void AnimationEngine::startColorChange(uint32_t targetColorHex,
+                                       uint8_t targetBrightness)
+{
+    pendingColor = targetColorHex;
+
     g_cfg.brightness = targetBrightness;
+
     g_ledEngine.applyBrightnessSafety();
-    
-    // Ativa a flag de transição dupla e joga a FSM para recolher a luz atual
-    g_isColorTransitionActive = true;
-    g_animationStep = g_maxSystemLeds - 1;
-    g_currentState = STATE_POWERING_OFF; 
+
+    colorTransitionActive = true;
+
+    animationStep = maxSystemLeds - 1;
+
+    currentState = STATE_POWERING_OFF;
 }
 
-void Animation_Update() {
-    if (g_currentState == STATE_OFF || g_currentState == STATE_ON) return;
+void AnimationEngine::update()
+{
+    if (currentState == STATE_OFF ||
+        currentState == STATE_ON)
+        return;
 
-    unsigned long currentTimestamp = millis();
-    if (currentTimestamp - g_lastStepTimestamp >= g_cfg.animationSpeed) {
-        g_lastStepTimestamp = currentTimestamp;
+    unsigned long now = millis();
 
-        switch (g_currentState) {
-            case STATE_POWERING_ON:
-                if (g_animationStep < g_maxSystemLeds) {
-                    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++) {
-                        if (!g_strips[i].enabled) continue;
-                        int16_t targetLedIdx = g_animationStep - g_strips[i].offset;
-                        if (targetLedIdx >= 0 && targetLedIdx < g_strips[i].ledCount) {
-                            g_ledEngine.setPixel(i, targetLedIdx, CRGB(g_cfg.colorHex));
-                        }
-                    }
-                    g_animationStep++;
-                } else {
-                    g_currentState = STATE_ON;
-                    g_isColorTransitionActive = false; 
-                }
-                break;
+    if (now - lastStepTimestamp < g_cfg.animationSpeed)
+        return;
 
-            case STATE_POWERING_OFF:
-                if (g_animationStep >= 0) {
-                    for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++) {
-                        if (!g_strips[i].enabled) continue;
-                        int16_t targetLedIdx = g_strips[i].ledCount - 1 - (g_maxSystemLeds - 1 - g_animationStep);
-                        if (targetLedIdx >= 0 && targetLedIdx < g_strips[i].ledCount) {
-                            g_ledEngine.setPixel(i, targetLedIdx, CRGB::Black);
-                        }
-                    }
-                    g_animationStep--;
-                } else {
-                    // SE TERMINOU DE RECOLHER E ERA TROCA DE COR: Inverte para subir!
-                    if (g_isColorTransitionActive) {
-                        g_cfg.colorHex = g_targetColorHex; // Transfere a nova cor para o buffer oficial
-                        g_animationStep = 0;               // Reseta o cursor para a base do chão
-                        g_currentState = STATE_POWERING_ON; // Altera o estado da FSM para subir acendendo
-                    } else {
-                        g_currentState = STATE_OFF;        // Desligamento comum
+    lastStepTimestamp = now;
+
+    switch (currentState)
+    {
+        case STATE_POWERING_ON:
+
+            if (animationStep < maxSystemLeds)
+            {
+                for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++)
+                {
+                    if (!g_strips[i].enabled)
+                        continue;
+
+                    int16_t led =
+                        animationStep - g_strips[i].offset;
+
+                    if (led >= 0 &&
+                        led < g_strips[i].ledCount)
+                    {
+                        g_ledEngine.setPixel(
+                            i,
+                            led,
+                            CRGB(g_cfg.colorHex));
                     }
                 }
-                break;
 
-            default:
-                break;
-        }
+                animationStep++;
+            }
+            else
+            {
+                currentState = STATE_ON;
+                colorTransitionActive = false;
+            }
+
+            break;
+
+        case STATE_POWERING_OFF:
+
+            if (animationStep >= 0)
+            {
+                for (uint8_t i = 0; i < CONFIG_MAX_STRIPS; i++)
+                {
+                    if (!g_strips[i].enabled)
+                        continue;
+
+                    int16_t led =
+                        g_strips[i].ledCount - 1 -
+                        (maxSystemLeds - 1 - animationStep);
+
+                    if (led >= 0 &&
+                        led < g_strips[i].ledCount)
+                    {
+                        g_ledEngine.setPixel(
+                            i,
+                            led,
+                            CRGB::Black);
+                    }
+                }
+
+                animationStep--;
+            }
+            else
+            {
+                if (colorTransitionActive)
+                {
+                    g_cfg.colorHex = pendingColor;
+
+                    animationStep = 0;
+
+                    currentState = STATE_POWERING_ON;
+                }
+                else
+                {
+                    currentState = STATE_OFF;
+                }
+            }
+
+            break;
+
+        default:
+            break;
     }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Compatibilidade com o código atual
+|--------------------------------------------------------------------------
+*/
+
+void Animation_Init()
+{
+    g_animation.begin();
+}
+
+void Animation_Update()
+{
+    g_animation.update();
+}
+
+void Animation_StartOpening()
+{
+    g_animation.startOpening();
+}
+
+void Animation_StartClosing()
+{
+    g_animation.startClosing();
+}
+
+void Animation_StartColorChange(uint32_t color,
+                                uint8_t brightness)
+{
+    g_animation.startColorChange(color,
+                                 brightness);
 }
