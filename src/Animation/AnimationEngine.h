@@ -26,13 +26,16 @@ public:
     void startColorChange(uint32_t targetColorHex,
                           uint8_t targetBrightness);
 
-    SystemState getState() const
-    {
-        return currentState;
-    }
+    SystemState getState() const;
 
 private:
     void calculateOffsets();
+    void updateOpening();
+    void updateClosing();
+    void finishClosing();
+    void prepareOpening();
+
+    bool isStripActive(uint8_t strip) const;
 
     SystemState currentState = STATE_OFF;
 
@@ -47,7 +50,6 @@ private:
 
 extern AnimationEngine g_animation;
 
-// Compatibilidade temporária
 void Animation_Init();
 void Animation_Update();
 void Animation_StartOpening();
