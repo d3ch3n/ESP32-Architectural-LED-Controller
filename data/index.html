@@ -151,6 +151,18 @@
                 </section>
 
                 <section class="control-group">
+                    <div class="row">
+                        <span class="label">Blink</span>
+                        <span class="value-display" id="commission-blink-state">Stopped</span>
+                    </div>
+
+                    <div class="commission-grid">
+                        <button type="button" class="commission-btn success" id="commission-blink-start">Iniciar Blink</button>
+                        <button type="button" class="commission-btn danger" id="commission-blink-stop">Parar Blink</button>
+                    </div>
+                </section>
+
+                <section class="control-group">
                     <div class="commission-grid">
                         <button type="button" class="commission-btn primary" id="commission-single">LED Único</button>
                         <button type="button" class="commission-btn primary" id="commission-fill">Preencher Até</button>
@@ -161,7 +173,8 @@
 
                 <p class="commission-help">
                     Use LED Único para localizar um pixel. Use Preencher Até para validar a contagem da fita.
-                    Use Auto Scan para percorrer a fita automaticamente. Ao chegar no último LED físico, clique em Parar Auto e depois em Salvar Quantidade.
+                    Use Blink para confirmar visualmente um LED e Auto Scan para percorrer a fita automaticamente.
+                    Ao chegar no último LED físico, clique em Parar Auto e depois em Salvar Quantidade.
                 </p>
             </div>
         </main>
