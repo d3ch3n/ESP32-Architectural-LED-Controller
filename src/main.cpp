@@ -1,49 +1,56 @@
 /**
  * @file main.cpp
- * @brief Device boot orchestration and execution thread scheduler.
+ * @brief Main execution core loop with Alexa and FSM updates.
  */
 
 #include <Arduino.h>
+#include <WiFi.h>              // <-- EXPÕE O WI-FI LOCAL PARA TODO O PROJETO
+#include <WiFiClientSecure.h>  // <-- EXPÕE A CRIPTOGRAFIA PARA OS WEBSOCKETS
+#include <WiFiManager.h>       // <-- INCLUDE INJETADO NO TOPO CORRETAMENTE
+
 #include "Config/Config.h"
+#include "Storage/StorageManager.h"
 #include "Led/LedController.h"
 #include "Animation/AnimationEngine.h"
-#include "Storage/StorageManager.h"
-#include "Web/WebService.h" // <- INCLUSÃO DA INTERFACE DE REDE
+#include "Web/WebService.h"
 
 void setup() {
     Serial.begin(115200);
-    delay(500);
-
-    Serial.println("\n\n========================================");
+    Serial.println("\n========================================");
     Serial.println("        RIPADO LIGHT CORE SYSTEM OS     ");
-    Serial.printf("        Booting Firmware Version: %s\n", RIPADO_VERSION);
     Serial.println("========================================");
 
-    // 1. Mount disk filesystem and evaluate dynamic parameter maps
-    if (g_storage.initFileSystem()) {
-        if (!g_storage.loadConfiguration()) {
-            Config_LoadDefaultHardware();
-        }
-    } else {
+    g_storage.begin();
+    
+    if (!g_storage.loadConfiguration()) {
         Config_LoadDefaultHardware();
     }
 
-    // 2. Instantiate and launch network pipes
-    g_webService.initNetworkAndServer();
+    // --- JANELA DE RESET DE WI-FI VIA SERIAL ---
+    Serial.println("[SYSTEM] Pressione 'r' em ate 3 segundos para resetar o Wi-Fi...");
+    unsigned long startCheck = millis();
+    while (millis() - startCheck < 3000) {
+        if (Serial.available() > 0) {
+            char c = Serial.read();
+            if (c == 'r' || c == 'R') {
+                WiFiManager wm; // Chamada limpa sem o include local
+                wm.resetSettings(); // Limpa as credenciais salvas na Flash
+                Serial.println("[SYSTEM] Memoria de Wi-Fi limpa com sucesso!");
+                break;
+            }
+        }
+    }
+    // --------------------------------------------
 
-    // 3. Drive hardware engines using properties loaded from the disk profile
     g_ledEngine.initHardware();
-    g_ledEngine.applyBrightnessSafety();
     Animation_Init();
-
+    g_webService.initNetworkAndServer();
+    
     Serial.println("[CORE_OS] Base kernel initialization successful. Mainframe online.");
 }
 
 void loop() {
-    // Asynchronous system processing pumps
+    g_webService.update();
     Animation_Update();
-    g_webService.update(); // <- Garanta esta chamada para limpeza de conexões mortas
-
     g_ledEngine.show();
-    delay(1);
 }

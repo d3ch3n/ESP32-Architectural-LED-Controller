@@ -38,3 +38,19 @@
 ### 2. Decisões de Arquitetura
 - Abandono de frameworks pesados (React/Vue) para eliminar sobrecarga de requisições HTTP e otimizar o tempo de renderização na CPU limitada do ESP32.
 - Conversão binária de strings Hex de cor para inteiros numéricos de 24-bits diretamente na camada do cliente (JavaScript), reduzindo o uso de strings e buffers na memória ram do microcontrolador.
+
+### 3. Status de Homologação em Rede [2026-06-27]
+- **Resultado:** SUCESSO DEFINITIVO.
+- **Métricas:** Conexão assíncrona estabelecida com o AP local sob o IP `192.168.0.38`. WebSocket ativo canalizando pacotes de controle bidirecional (`/ws`) em tempo real.
+- **Estabilidade:** Consumo de memória Heap estável, mDNS operando em `http://ripadomestre.local`. Isolamento de escopo garantido (a renderização gráfica dos LEDs não sofreu jitter ou congelamento durante as requisições HTTP).
+
+## Sprint 6: Painel de Engenharia & LittleFS Writer [2026-06-27]
+### 1. Implementações
+- Desenvolvida a interface visual expandida com navegação por abas assíncronas (Control / Installer).
+- Criada a API REST HTTP POST `/api/config` no Core para recepção dinâmica de parâmetros de hardware.
+- Implementado o motor **"Led Finder"** via barramento WebSocket, permitindo injeção de pulso de luz no último pixel para calibração de contagem de fitas em tempo real.
+- Acoplada a rotina de auto-salvamento via `StorageManager` seguida de Reboot controlado por software (`ESP.restart()`).
+
+### 2. Decisões de Arquitetura
+- Migração completa para a estrutura moderna `JsonDocument` (ArduinoJson v7), eliminando todos os warnings de depreciação de memória da pilha (Stack) gerados pela v6.
+- Correção crítica de hardware: remanejamento do barramento lógico da Fita 2 do pino de boot GPIO 0 para o pino seguro GPIO 16, eliminando interrupções elétricas no momento de pico de RF do Wi-Fi.

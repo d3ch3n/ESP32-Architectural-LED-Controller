@@ -133,3 +133,18 @@ function triggerLedFinder(stripIndex) {
         console.log(`Dispatched finder frame to strip ${stripIndex} target index ${targetCount}`);
     }
 }
+
+function resetWiFi() {
+    if (confirm("Deseja realmente apagar o Wi-Fi atual? O dispositivo reiniciará em Modo de Configuração.")) {
+        fetch('/api/reset_wifi')
+            .then(response => response.json())
+            .then(data => {
+                alert("Wi-Fi resetado! Conecte na rede 'Ripado Setup' para configurar a nova rede.");
+                window.location.reload();
+            })
+            .catch(err => {
+                alert("Erro ao enviar comando. Verifique a conexão.");
+                console.error(err);
+            });
+    }
+}
