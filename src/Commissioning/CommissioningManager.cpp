@@ -8,27 +8,42 @@ CommissioningManager g_commissioning;
 
 void CommissioningManager::begin()
 {
-    m_autoScanRunning = false;
-    m_currentStrip = 0;
-    m_currentLed = 0;
-    m_autoScanIntervalMs = 120;
-    m_autoScanColor = CRGB::White;
-    m_lastAutoScanStep = 0;
+    m_session.mode = CommissioningMode::Off;
+    m_session.strip = 0;
+    m_session.led = 0;
+    m_session.count = 0;
+    m_session.intervalMs = 120;
+    m_session.color = CRGB::White;
+    m_session.running = false;
+    m_session.blinkState = true;
+    m_session.lastTick = 0;
 }
 
 void CommissioningManager::update()
 {
-    if (!m_autoScanRunning)
-        return;
-
     unsigned long now = millis();
 
-    if (now - m_lastAutoScanStep < m_autoScanIntervalMs)
+    if (m_session.mode == CommissioningMode::Blink)
+    {
+        if (now - m_session.lastTick >= m_session.intervalMs)
+        {
+            m_session.lastTick = now;
+            m_session.blinkState = !m_session.blinkState;
+        }
+
+        renderBlink();
+        return;
+    }
+
+    if (m_session.mode != CommissioningMode::AutoScan)
         return;
 
-    m_lastAutoScanStep = now;
+    if (now - m_session.lastTick < m_session.intervalMs)
+        return;
 
-    uint16_t count = g_ledEngine.ledCount(m_currentStrip);
+    m_session.lastTick = now;
+
+    uint16_t count = g_ledEngine.ledCount(m_session.strip);
 
     if (count == 0)
     {
@@ -38,24 +53,27 @@ void CommissioningManager::update()
 
     showCurrentAutoScanLed();
 
-    if (m_currentLed < count - 1)
+    if (m_session.led < count - 1)
     {
-        m_currentLed++;
+        m_session.led++;
     }
     else
     {
-        m_autoScanRunning = false;
+        m_session.mode = CommissioningMode::Off;
+        m_session.running = false;
 
         Serial.printf(
             "[COMMISSIONING] AUTO SCAN FINISHED | Strip: %u | Last LED: %u\n",
-            m_currentStrip + 1,
-            m_currentLed);
+            m_session.strip + 1,
+            m_session.led);
     }
 }
 
 void CommissioningManager::off()
 {
-    m_autoScanRunning = false;
+    m_session.mode = CommissioningMode::Off;
+    m_session.running = false;
+    m_session.blinkState = false;
 
     Serial.println("[COMMISSIONING] OFF");
 
@@ -67,47 +85,54 @@ void CommissioningManager::showSingle(uint8_t strip,
                                       uint16_t led,
                                       const CRGB& color)
 {
-    m_autoScanRunning = false;
+    m_session.mode = CommissioningMode::Single;
+    m_session.running = false;
+    m_session.strip = strip;
+    m_session.led = led;
+    m_session.color = color;
+    m_session.blinkState = true;
+    m_session.lastTick = 0;
 
-    if (strip >= CONFIG_MAX_STRIPS)
-        strip = 0;
+    normalizeStrip();
 
     Serial.printf(
         "[COMMISSIONING] SINGLE | Strip: %u | LED: %u | RGB(%u,%u,%u)\n",
-        strip + 1,
-        led,
-        color.r,
-        color.g,
-        color.b);
+        m_session.strip + 1,
+        m_session.led,
+        m_session.color.r,
+        m_session.color.g,
+        m_session.color.b);
 
     g_ledEngine.clearAll();
-    g_ledEngine.setPixel(strip, led, color);
+    g_ledEngine.setPixel(m_session.strip, m_session.led, m_session.color);
     g_ledEngine.show();
-
-    m_currentStrip = strip;
-    m_currentLed = led;
 }
 
 void CommissioningManager::fillTo(uint8_t strip,
                                   uint16_t led,
                                   const CRGB& color)
 {
-    m_autoScanRunning = false;
+    m_session.mode = CommissioningMode::Fill;
+    m_session.running = false;
+    m_session.strip = strip;
+    m_session.led = led;
+    m_session.color = color;
+    m_session.blinkState = false;
+    m_session.lastTick = 0;
 
-    if (strip >= CONFIG_MAX_STRIPS)
-        strip = 0;
+    normalizeStrip();
 
     Serial.printf(
         "[COMMISSIONING] FILL | Strip: %u | LED: %u | RGB(%u,%u,%u)\n",
-        strip + 1,
-        led,
-        color.r,
-        color.g,
-        color.b);
+        m_session.strip + 1,
+        m_session.led,
+        m_session.color.r,
+        m_session.color.g,
+        m_session.color.b);
 
     g_ledEngine.clearAll();
 
-    uint16_t count = g_ledEngine.ledCount(strip);
+    uint16_t count = g_ledEngine.ledCount(m_session.strip);
 
     if (count == 0)
     {
@@ -116,40 +141,95 @@ void CommissioningManager::fillTo(uint8_t strip,
         return;
     }
 
-    if (led >= count)
-        led = count - 1;
+    if (m_session.led >= count)
+        m_session.led = count - 1;
 
-    for (uint16_t i = 0; i <= led; i++)
+    for (uint16_t i = 0; i <= m_session.led; i++)
     {
-        g_ledEngine.setPixel(strip, i, color);
+        g_ledEngine.setPixel(m_session.strip, i, m_session.color);
     }
 
     g_ledEngine.show();
-
-    m_currentStrip = strip;
-    m_currentLed = led;
 }
 
 void CommissioningManager::saveCount(uint8_t strip,
                                      uint16_t count)
 {
-    m_autoScanRunning = false;
+    m_session.mode = CommissioningMode::Off;
+    m_session.running = false;
+    m_session.strip = strip;
+    m_session.count = count;
 
-    if (strip >= CONFIG_MAX_STRIPS)
-        strip = 0;
+    normalizeStrip();
 
     if (count == 0)
         return;
 
-    g_strips[strip].ledCount = count;
-    g_strips[strip].enabled = true;
+    g_strips[m_session.strip].ledCount = count;
+    g_strips[m_session.strip].enabled = true;
 
     g_storage.saveConfiguration();
 
     Serial.printf(
         "[COMMISSIONING] SAVE COUNT | Strip: %u | LEDs: %u\n",
-        strip + 1,
+        m_session.strip + 1,
         count);
+}
+
+void CommissioningManager::startBlink(uint8_t strip,
+                                      uint16_t led,
+                                      uint16_t intervalMs,
+                                      const CRGB& color)
+{
+    m_session.mode = CommissioningMode::Blink;
+    m_session.running = true;
+    m_session.strip = strip;
+    m_session.led = led;
+    m_session.intervalMs = intervalMs;
+    m_session.color = color;
+    m_session.blinkState = true;
+    m_session.lastTick = millis();
+
+    normalizeStrip();
+
+    if (m_session.intervalMs < 80)
+        m_session.intervalMs = 80;
+
+    uint16_t count = g_ledEngine.ledCount(m_session.strip);
+
+    if (count == 0)
+    {
+        Serial.println("[COMMISSIONING] BLINK FAILED | Invalid strip or zero LEDs.");
+        off();
+        return;
+    }
+
+    if (m_session.led >= count)
+        m_session.led = count - 1;
+
+    Serial.printf(
+        "[COMMISSIONING] BLINK START | Strip: %u | LED: %u | Interval: %u ms | RGB(%u,%u,%u)\n",
+        m_session.strip + 1,
+        m_session.led,
+        m_session.intervalMs,
+        m_session.color.r,
+        m_session.color.g,
+        m_session.color.b);
+
+    renderBlink();
+}
+
+void CommissioningManager::stopBlink()
+{
+    if (m_session.mode == CommissioningMode::Blink)
+    {
+        Serial.printf(
+            "[COMMISSIONING] BLINK STOP | Strip: %u | LED: %u\n",
+            m_session.strip + 1,
+            m_session.led);
+    }
+
+    off();
 }
 
 void CommissioningManager::startAutoScan(uint8_t strip,
@@ -157,10 +237,10 @@ void CommissioningManager::startAutoScan(uint8_t strip,
                                          uint16_t intervalMs,
                                          const CRGB& color)
 {
-    if (strip >= CONFIG_MAX_STRIPS)
-        strip = 0;
+    m_session.strip = strip;
+    normalizeStrip();
 
-    uint16_t count = g_ledEngine.ledCount(strip);
+    uint16_t count = g_ledEngine.ledCount(m_session.strip);
 
     if (count == 0)
     {
@@ -174,58 +254,93 @@ void CommissioningManager::startAutoScan(uint8_t strip,
     if (intervalMs < 30)
         intervalMs = 30;
 
-    m_currentStrip = strip;
-    m_currentLed = startLed;
-    m_autoScanIntervalMs = intervalMs;
-    m_autoScanColor = color;
-    m_lastAutoScanStep = 0;
-    m_autoScanRunning = true;
+    m_session.mode = CommissioningMode::AutoScan;
+    m_session.running = true;
+    m_session.led = startLed;
+    m_session.intervalMs = intervalMs;
+    m_session.color = color;
+    m_session.blinkState = true;
+    m_session.lastTick = 0;
 
     Serial.printf(
         "[COMMISSIONING] AUTO SCAN START | Strip: %u | Start LED: %u | Interval: %u ms\n",
-        strip + 1,
-        startLed,
-        intervalMs);
+        m_session.strip + 1,
+        m_session.led,
+        m_session.intervalMs);
 
     showCurrentAutoScanLed();
 }
 
 void CommissioningManager::stopAutoScan()
 {
-    if (m_autoScanRunning)
+    if (m_session.mode == CommissioningMode::AutoScan)
     {
         Serial.printf(
             "[COMMISSIONING] AUTO SCAN STOP | Strip: %u | LED: %u\n",
-            m_currentStrip + 1,
-            m_currentLed);
+            m_session.strip + 1,
+            m_session.led);
     }
 
-    m_autoScanRunning = false;
+    m_session.mode = CommissioningMode::Off;
+    m_session.running = false;
+}
+
+bool CommissioningManager::isRunning() const
+{
+    return m_session.running;
+}
+
+bool CommissioningManager::isBlinking() const
+{
+    return m_session.mode == CommissioningMode::Blink;
 }
 
 bool CommissioningManager::isAutoScanRunning() const
 {
-    return m_autoScanRunning;
+    return m_session.mode == CommissioningMode::AutoScan;
+}
+
+CommissioningMode CommissioningManager::currentMode() const
+{
+    return m_session.mode;
 }
 
 uint8_t CommissioningManager::currentStrip() const
 {
-    return m_currentStrip;
+    return m_session.strip;
 }
 
 uint16_t CommissioningManager::currentLed() const
 {
-    return m_currentLed;
+    return m_session.led;
+}
+
+void CommissioningManager::normalizeStrip()
+{
+    if (m_session.strip >= CONFIG_MAX_STRIPS)
+        m_session.strip = 0;
 }
 
 void CommissioningManager::showCurrentAutoScanLed()
 {
     g_ledEngine.clearAll();
-    g_ledEngine.setPixel(m_currentStrip, m_currentLed, m_autoScanColor);
+    g_ledEngine.setPixel(m_session.strip, m_session.led, m_session.color);
     g_ledEngine.show();
 
     Serial.printf(
         "[COMMISSIONING] AUTO SCAN LED | Strip: %u | LED: %u\n",
-        m_currentStrip + 1,
-        m_currentLed);
+        m_session.strip + 1,
+        m_session.led);
+}
+
+void CommissioningManager::renderBlink()
+{
+    g_ledEngine.clearAll();
+
+    if (m_session.blinkState)
+    {
+        g_ledEngine.setPixel(m_session.strip, m_session.led, m_session.color);
+    }
+
+    g_ledEngine.show();
 }

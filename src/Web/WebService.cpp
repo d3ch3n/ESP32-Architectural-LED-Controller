@@ -152,6 +152,7 @@ static void broadcastCommissioningState(const String& mode)
     doc["led"] = g_commissioning.currentLed();
     doc["mode"] = mode;
     doc["autoScan"] = g_commissioning.isAutoScanRunning();
+    doc["blink"] = g_commissioning.isBlinking();
 
     String responseBuffer;
     serializeJson(doc, responseBuffer);
@@ -214,6 +215,20 @@ static bool runCommissioningCommand(const String& action,
     {
         g_commissioning.stopAutoScan();
         broadcastCommissioningState("autoStop");
+        return true;
+    }
+
+    if (action == "blinkStart")
+    {
+        g_commissioning.startBlink(strip, led, intervalMs, color);
+        broadcastCommissioningState("blinkStart");
+        return true;
+    }
+
+    if (action == "blinkStop")
+    {
+        g_commissioning.stopBlink();
+        broadcastCommissioningState("blinkStop");
         return true;
     }
 

@@ -45,6 +45,7 @@ function onMessage(event) {
         document.getElementById('commission-led').value = data.led;
         document.getElementById('commission-led-display').innerText = data.led;
         document.getElementById('commission-auto-state').innerText = data.autoScan ? "Running" : "Stopped";
+        document.getElementById('commission-blink-state').innerText = data.blink ? "Running" : "Stopped";
         return;
     }
 }
@@ -209,6 +210,14 @@ function initCommissioning() {
         sendCommissioningCommand('autoStop');
     });
 
+    document.getElementById('commission-blink-start').addEventListener('click', () => {
+        sendCommissioningCommand('blinkStart');
+    });
+
+    document.getElementById('commission-blink-stop').addEventListener('click', () => {
+        sendCommissioningCommand('blinkStop');
+    });
+
     document.getElementById('commission-save-count').addEventListener('click', () => {
         let led = parseInt(ledInput.value);
         let count = led + 1;
@@ -266,22 +275,6 @@ function sendCommissioningCommand(action, count = null) {
             console.log("Commissioning REST error:", error);
         });
 
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        let payload = {
-            cmd: "commissioning",
-            action: action,
-            strip: strip,
-            led: led,
-            color: color,
-            interval: interval
-        };
-
-        if (count !== null)
-            payload.count = count;
-
-        console.log("WS TX COMMISSIONING:", payload);
-        websocket.send(JSON.stringify(payload));
-    }
 }
 
 function resetWiFi() {
